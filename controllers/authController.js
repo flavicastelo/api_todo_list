@@ -25,7 +25,7 @@ export const login = (req, res) => {
 
         crypto.checkPassWord(password, user.password);
         const token = crypto.createToken(user, 900);
-        res.status(200).json({ user, msg: "Login feito com suceso!", token });
+        res.status(200).json({ user, message: "Login feito com suceso!", token });
     });
 }
 

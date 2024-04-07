@@ -17,7 +17,7 @@ export const getUsers = (req, res) => {
 export const createUser = (req, res) => {
     const password = req.body.password;
     const crypto = new Crypto();
-    const passwordHash =  crypto.cryptPass(password);
+    const passwordHash = crypto.cryptPass(password);
 
     const queryUser = "INSERT INTO users(`name`, `email`, `password`) VALUES(?)";
 
@@ -35,4 +35,4 @@ export const createUser = (req, res) => {
         return res.status(201).json("Usuário criado com sucesso!");
     });
 }
-
+//TODO EDITAR E EXCLUIR CADASTRO
