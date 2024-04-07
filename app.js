@@ -1,24 +1,10 @@
-const express = require("express");
-const mysql = require('mysql2');
-require('dotenv').config();
+import  express from "express";
+import cors from "cors";
+import router from "./routes/router.js";
 
 const app = express();
-const conection = mysql.createConnection({
-    host:'localhost',
-    user:'root',
-    password: process.env.DBPASS,
-    database:'todolist'
-});
+app.use(express.json()); //para usar json no post
+app.use(cors());
 
-conection.connect(function(erro){
-    if(erro) throw erro;
-    console.log('Conectado com sucesso!');
-});
-const port = 3000;
-app.get('/', function (req, res){
-    console.log('Funcionou!');
-    res.write("Deu bom");
-    res.end();
-});
-
-app.listen(port);
+app.use("/api", router)
+app.listen(3000);
