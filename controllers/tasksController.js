@@ -1,4 +1,5 @@
 import { db } from "../database/db.js";
+
 export const createTask = (req, res) => {
     const queryTask = "INSERT INTO tasks(`user_id`, `description`) VALUES(?)";
 

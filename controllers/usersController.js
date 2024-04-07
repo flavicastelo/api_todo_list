@@ -1,4 +1,5 @@
 import { db } from "../database/db.js";
+import Crypto from "../utils/crypto.js"
 
 export const getUsers = (req, res) => {
     const queryUser = "SELECT * FROM users";
@@ -14,12 +15,16 @@ export const getUsers = (req, res) => {
 }
 
 export const createUser = (req, res) => {
-    const queryUser = "INSERT INTO tasks(`name`, `email`, `password`) VALUES(?)";
+    const password = req.body.password;
+    const crypto = new Crypto();
+    const passwordHash =  crypto.cryptPass(password);
+
+    const queryUser = "INSERT INTO users(`name`, `email`, `password`) VALUES(?)";
 
     const values = [
         req.body.name,
         req.body.email,
-        req.body.password
+        passwordHash
     ];
     db.query(queryUser, [values], (err) => {
         if (err) {
