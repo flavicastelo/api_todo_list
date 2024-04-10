@@ -1,6 +1,5 @@
 import { db } from "../database/db.js";
 import Crypto from "../utils/crypto.js"
-import jwt from "jsonwebtoken";
 
 export const login = (req, res) => {
     const email = req.body.email;
@@ -8,27 +7,25 @@ export const login = (req, res) => {
     const crypto = new Crypto();
 
     const queryEmail = "SELECT * FROM users WHERE email = ?";
-    db.query(queryEmail, [email], (err, result) => {
-        if (err) {
+    db.query(queryEmail, [email], (error, result) => {
+        if (error) {
             return res.status(500).json({
-                error: err.message
+                error: error.message
             });
         }
 
         const user = result.find(user => user && user.email === email);
-
-        if (!user) {
-            return res.status(404).json({
-                error: "Usuário não encontrado"
+        const passVerify = crypto.checkPassWord(password, user.password);
+        
+        if (!user || !passVerify) {
+            return res.status(401).json({
+                error: "Usuário ou Senha inválido!"
             });
         }
 
-        crypto.checkPassWord(password, user.password);
-        const token = crypto.createToken(user, 900);
+        
+        const token = crypto.createToken(user, 1800);
         res.status(200).json({ user, message: "Login feito com suceso!", token });
     });
 }
 
-export const logout = (req, res) => {
-
-}

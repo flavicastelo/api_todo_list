@@ -1,32 +1,47 @@
 import { db } from "../database/db.js";
 
 export const createTask = (req, res) => {
-    const queryTask = "INSERT INTO tasks(`user_id`, `description`) VALUES(?)";
+    const userId = req.body.userId;
+    const description = req.body.description;
 
-    const values = [
-        req.body.userId,
-        req.body.description
-    ];
+    if (isNaN(userId)) {
+        return res.status(422).json({ error: "userId deve ser um número." });
+    }
 
-    if (!req.body.userId || !req.body.description) return res.status(400).json({error: "Preencha todos os campos!"});
-
-    db.query(queryTask, [values], (err) => {
-        if (err) {
-            return res.status(500).json({
-                error: err.message
+    const queryUser = "SELECT * FROM users WHERE user_id = ?";
+    db.query(queryUser, userId, (error, result) => {
+        if (error) {
+            return res.status(500).json({ error: error.message });
+        }
+        const user = result.find(user => user && user.user_id === parseInt(userId));
+        if (!user) {
+            return res.status(404).json({
+                error: "Usuário não encontrado."
             });
         }
-        return res.status(201).json({message: "Tarefa criada com sucesso!"});
+        const queryTask = "INSERT INTO tasks(`user_id`, `description`) VALUES(?)";
+        const values = [
+            userId,
+            description
+        ];
+
+        db.query(queryTask, [values], (error) => {
+            if (error) {
+                return res.status(500).json({ error: error.message });
+            }
+            return res.status(201).json({ message: "Tarefa criada com sucesso!" });
+        });
     });
-}
+};
+
 
 export const getTasks = (req, res) => {
     const queryTask = "SELECT * FROM tasks";
 
-    db.query(queryTask, (err, data) => {
-        if (err) {
+    db.query(queryTask, (error, data) => {
+        if (error) {
             return res.status(500).json({
-                error: err.message
+                error: error.message
             });
         }
         return res.status(200).json(data);
@@ -38,54 +53,97 @@ export const editTask = (req, res) => {
     const taskId = req.params.taskId;
     const newDescription = req.body.newDescription;
 
-    if (!newDescription) return res.status(400).json({error: "Campo não pode ser vazio!"});
-    
-    const queryGetUserTasks = "SELECT * FROM tasks WHERE user_id = ?";
-    db.query(queryGetUserTasks, [userId], (err, result) => {
-        if (err) {
+    if (!newDescription) return res.status(422).json({ error: "Campo não pode ser vazio!" });
+    if (isNaN(userId)) {
+        return res.status(422).json({ error: "userId deve ser um número." });
+    }
+    if (isNaN(taskId)) {
+        return res.status(422).json({ error: "taskId deve ser um número." });
+    }
+
+    const queryUser = "SELECT * FROM users WHERE user_id = ?";
+    db.query(queryUser, [userId], (error, userResult) => {
+        if (error) {
             return res.status(500).json({
-                error: err.message
+                error: error.message
             });
         }
 
-        const task = result.find(task => task && task.task_id === parseInt(taskId));
-
-        if (!task) {
+        if (userResult.length === 0) {
             return res.status(404).json({
-                error: "Tarefa não encontrada."
+                error: "Usuário não encontrado."
             });
         }
 
-        const queryUpdateTask = "UPDATE tasks SET description = ? WHERE user_id = ? AND task_id = ?";
-        db.query(queryUpdateTask, [newDescription, userId, taskId], (err) => {
-            if (err) {
+        const queryTasks = "SELECT * FROM tasks WHERE user_id = ?";
+        db.query(queryTasks, [userId], (error, result) => {
+            if (error) {
                 return res.status(500).json({
-                    error: err.message
+                    error: error.message
                 });
             }
-            return res.status(200).json({message: "Tarefa editada com sucesso!"});
+
+            const task = result.find(task => task && task.task_id === parseInt(taskId));
+
+            if (!task) {
+                return res.status(404).json({
+                    error: "Tarefa não encontrada."
+                });
+            }
+
+            const queryUpdateTask = "UPDATE tasks SET description = ? WHERE user_id = ? AND task_id = ?";
+            db.query(queryUpdateTask, [newDescription, userId, taskId], (error) => {
+                if (error) {
+                    return res.status(500).json({
+                        error: error.message
+                    });
+                }
+                return res.status(200).json({ message: "Tarefa editada com sucesso!" });
+            });
         });
     });
 }
 
+
 export const deleteTask = (req, res) => {
     const userId = req.params.userId;
     const taskId = req.params.taskId;
+    if (isNaN(userId)) {
+        return res.status(422).json({ error: "userId deve ser um número." });
+    }
+    if (isNaN(taskId)) {
+        return res.status(422).json({ error: "taskId deve ser um número." });
+    }
 
-    const queryDeleteTask = "DELETE FROM tasks WHERE user_id = ? AND task_id = ?";
-    db.query(queryDeleteTask, [userId, taskId], (err, result) => {
-        if (err) {
+    const queryUser = "SELECT * FROM users WHERE user_id = ?";
+    db.query(queryUser, [userId], (error, userResult) => {
+        if (error) {
             return res.status(500).json({
-                error: err.message
+                error: error.message
             });
         }
 
-        if (result.affectedRows === 0) {
+        if (userResult.length === 0) {
             return res.status(404).json({
-                error: "Tarefa não encontrada."
+                error: "Usuário não encontrado."
             });
         }
 
-        return res.status(200).json({message: "Tarefa excluída com sucesso!"});
+        const queryDeleteTask = "DELETE FROM tasks WHERE user_id = ? AND task_id = ?";
+        db.query(queryDeleteTask, [userId, taskId], (error, result) => {
+            if (error) {
+                return res.status(500).json({
+                    error: error.message
+                });
+            }
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    error: "Tarefa não encontrada."
+                });
+            }
+
+            return res.status(200).json({ message: "Tarefa excluída com sucesso!" });
+        });
     });
 }

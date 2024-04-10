@@ -5,7 +5,7 @@ function checkToken(req, res, next) {
     const token = authHeader && authHeader.split(" ")[1];
 
     if(!token){
-        return res.status(401).json({msg: "Sem permissão para acesso!"});
+        return res.status(401).json({error: "Sem permissão para acesso!"});
     }
 
     try {
@@ -15,7 +15,7 @@ function checkToken(req, res, next) {
 
         next();
     } catch (error) {
-        res.status(400).json({msg: "Token inválido!"});
+        res.status(400).json({error: "Token inválido!"});
     }
 }
 
