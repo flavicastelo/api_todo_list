@@ -15,23 +15,23 @@ export const getUsers = (req, res) => {
     });
 }
 
-export const createUser = (req, res) => {
+export const createUser = async (req, res) => {
     const password = req.body.password;
     const name =  req.body.name;
     const email =  req.body.email;
     
     const regex = new Regex();
     const isValid = regex.regexPass(password);
-    if(!isValid) return res.status(422).json({error: "Padrão de senha inválido!"});
+    if(!isValid) return res.status(422).json({error: 'invalid_password'});
     const isValidEmail = regex.regexEmail(email);
-    if(!isValidEmail) return res.status(422).json({error: "Digite um e-mail válido!"});
-    
+    if(!isValidEmail) return res.status(422).json({error: 'invalid_email'});
+
     const crypto = new Crypto();
-    const passwordHash = crypto.cryptPass(password);
+    const passwordHash = await crypto.cryptPass(password);
 
     const queryUser = "INSERT INTO users(`name`, `email`, `password`) VALUES(?)";
 
-    if (!name || !email || !password) return res.status(422).json({error: "Preencha todos os campos!"});
+    if (!name || !email || !password) return res.status(422).json({error: 'missing_fields'});
     const values = [
         name,
         email,
